@@ -1,15 +1,5 @@
 'use strict';
 
-let toDoData = [
-  {
-    value: 'Сварить кофе',
-    completed: false
-  }, 
-  {
-    value: 'Помыть посуду',
-    completed: true
-  }
-];
 const
   todoControl = document.querySelector('.todo-control'),
   headerInput = document.querySelector('.header-input'),
