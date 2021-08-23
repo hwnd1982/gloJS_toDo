@@ -1,58 +1,75 @@
 'use strict';
 
+let toDoData = [
+  {
+    value: 'Сварить кофе',
+    completed: false
+  }, 
+  {
+    value: 'Помыть посуду',
+    completed: true
+  }
+];
 const
+  todoControl = document.querySelector('.todo-control'),
   headerInput = document.querySelector('.header-input'),
-  headerButton = document.getElementById('add'),
-  toDoList = document.getElementById('todo'),
-  toDoCompleted = document.getElementById('completed'),
-  newToDoItem = toDoList.querySelector('.todo-item').cloneNode(true),
+  todoList = document.getElementById('todo'),
+  todoCompleted = document.getElementById('completed'),
   checkSpaces = function(str) {
     return !str ? str : str.trim() !== '';
   },
-  isNumber = function(num) {
-    return !isNaN(parseFloat(num)) && isFinite(num);
-  },
-  childOf = (childElem, className) => {
-    if (childElem === document.documentElement || childElem === document.body) {return false;}
-    while(!childElem.classList.contains(className)) {
-      childElem = childElem.parentNode; 
-      if (childElem === document.body) {return false;}
-    }
-    return childElem; 
-  },
-  toggleStates = function (event) {
-    let selectedTask = childOf(event.target, 'todo-item');
+  addTodo = function () {
+    todoList.textContent = '';
+    todoCompleted.textContent = '';
 
-    if (selectedTask) {
-      if (selectedTask.parentNode.classList.contains('todo-list')) {
-        toDoCompleted.prepend(selectedTask);
+    let todoData = [];
+    if (localStorage.todoData) {
+      todoData = JSON.parse(localStorage.todoData);
+    } else {
+      localStorage.todoData  = JSON.stringify(todoData);
+    }
+    todoData.forEach(function(item){
+      const li = document.createElement('li');
+
+      li.classList.add('todo-item');
+      li.innerHTML = 
+      `
+        <span class="text-todo">${item.value}</span>
+        <div class="todo-buttons">
+          <button class="todo-remove"></button>
+          <button class="todo-complete"></button>
+        </div>
+      `;
+      if (item.completed) {
+        todoCompleted.prepend(li);
       } else {
-        toDoList.prepend(selectedTask);
+        todoList.append(li);
       }
-    }
-  },
-  deleteTask = function (event) {
-    let selectedTask = childOf(event.target, 'todo-item');
-    
-    if (selectedTask) {
-      selectedTask.remove();
-    }
-  },
-  addNewTask = function (event) {
-    event.preventDefault();
-    if (checkSpaces(headerInput.value) && !isNumber(headerInput.value)) {
-      let newTask = newToDoItem.cloneNode(true);
-      
-      newTask.querySelector('.text-todo').textContent = headerInput.value.trim();
-      toDoList.prepend(newTask);
-      newTask.querySelector('.todo-complete').addEventListener('click', toggleStates);
-      newTask.querySelector('.todo-remove').addEventListener('click', deleteTask);
-    }
-    headerInput.value = '';
+      const btnTodoCompleted = li.querySelector('.todo-complete').addEventListener('click', function() {
+        item.completed = !item.completed;
+        localStorage.todoData  = JSON.stringify(todoData);
+        addTodo();
+      });
+      const btnTodoRemove = li.querySelector('.todo-remove').addEventListener('click', function() {
+        todoData.splice(todoData.indexOf(item), 1);
+        localStorage.todoData  = JSON.stringify(todoData);
+        addTodo();
+      });
+    });
   };
 
-  headerButton.addEventListener('click', addNewTask);
-  document.querySelectorAll('.todo-item').forEach(function (item) {
-    item.querySelector('.todo-complete').addEventListener('click', toggleStates);
-    item.querySelector('.todo-remove').addEventListener('click', deleteTask);
-  });
+todoControl.addEventListener('submit', function (event) {
+  event.preventDefault();
+  if (checkSpaces(headerInput.value)) {
+    let todoData = JSON.parse(localStorage.todoData);
+    todoData.push({
+      value: headerInput.value.trim(),
+      completed: false
+    });
+    localStorage.todoData  = JSON.stringify(todoData);
+    headerInput.value = '';
+    addTodo();
+  }
+});
+
+addTodo();
