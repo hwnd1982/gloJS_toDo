@@ -9,15 +9,10 @@ const
     return !str ? str : str.trim() !== '';
   },
   addTodo = function () {
+    const todoData = localStorage.todoData ? JSON.parse(localStorage.todoData) : [];
+    
     todoList.textContent = '';
     todoCompleted.textContent = '';
-
-    let todoData = [];
-    if (localStorage.todoData) {
-      todoData = JSON.parse(localStorage.todoData);
-    } else {
-      localStorage.todoData  = JSON.stringify(todoData);
-    }
     todoData.forEach(function(item){
       const li = document.createElement('li');
 
@@ -51,7 +46,8 @@ const
 todoControl.addEventListener('submit', function (event) {
   event.preventDefault();
   if (checkSpaces(headerInput.value)) {
-    let todoData = JSON.parse(localStorage.todoData);
+    const todoData = localStorage.todoData ? JSON.parse(localStorage.todoData) : [];
+
     todoData.push({
       value: headerInput.value.trim(),
       completed: false
