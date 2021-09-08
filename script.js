@@ -18,6 +18,40 @@ class ToDo {
   checkSpaces(str) {
     return !str ? str : str.trim() !== '';
   }
+  makeEaseOut(timing) {
+    return timeFraction => 1 - timing(1 - timeFraction);
+  }
+  timing(timeFraction) {
+    return Math.pow(timeFraction, 2) * (1.75 * timeFraction - 0.75);
+  }
+  animate({ duration, draw, timing }) {
+    const
+      start = performance.now(),
+      requestID = requestAnimationFrame((function animate(time) {
+        const
+          timeFraction = (time - start) / duration,
+          progress = timing(timeFraction > 1 ? 1 : timeFraction);
+        draw.call(this, progress);
+
+        if (timeFraction < 1) {
+          return requestAnimationFrame(animate.bind(this));
+        } else {
+          cancelAnimationFrame(requestID);
+        }
+      }).bind(this));
+  }
+  removeToDoItemAnimationToRight(item, action, progress) {
+    item.style.transform = ` translate(${progress * 105 + '%'}, 0)`;
+    if (progress === 1) {
+      action();
+    }
+  }
+  addToDoItemAnimationFromLeft(item, progress) {
+    item.style.transform = ` translate(${-105 + (progress * 105) + '%'}, 0)`;
+    if (progress === 1) {
+      item.style.transform = '';
+    }
+  }
   editTodoItem(event) {
     const
       li = event.target.parentElement.parentElement,
@@ -86,7 +120,17 @@ class ToDo {
     item.completed = !item.completed;
     localStorage.todoData  = JSON.stringify(this.todoData);
     //
-    item.completed ? todoCompleted.prepend(li) : todoList.append(li);
+    this.animate({
+      duration: 1000,
+      timing: this.timing,
+      draw: this.removeToDoItemAnimationToRight.bind(this, li,
+        item.completed ? () => todoCompleted.prepend(li) : () =>  todoList.append(li))
+    });
+    setTimeout(this.animate, 1000, {
+      duration: 1000,
+      timing: this.makeEaseOut(this.timing),
+      draw: this.addToDoItemAnimationFromLeft.bind(this, li)
+    });
   }
   removeTodoItem(event) {
     const
@@ -97,11 +141,20 @@ class ToDo {
     this.items.splice(index, 1);
     localStorage.todoData  = JSON.stringify(this.todoData);
     //
-    li.remove();
+    this.animate({
+      duration: 1000,
+      timing: this.timing,
+      draw: this.removeToDoItemAnimationToRight.bind(this, li, () => li.remove())
+    });
   }
-  addTodoItem(item) {
+  addTodoItem(item, animated) {
     const li = this.getNewTodoItem(item);
 
+    this.animate({
+      duration: animated ? 1000 : 0,
+      timing: this.makeEaseOut(this.timing),
+      draw: this.addToDoItemAnimationFromLeft.bind(this, li)
+    });
     item.completed ? todoCompleted.append(li) : todoList.append(li);
     li.querySelector('.todo-complete').addEventListener('click', event => this.stateToggleTodoItem(event));
     li.querySelector('.todo-remove').addEventListener('click', event => this.removeTodoItem(event));
@@ -117,7 +170,7 @@ class ToDo {
         });
         localStorage.todoData  = JSON.stringify(this.todoData);
         headerInput.value = '';
-        this.addTodoItem(this.todoData[this.todoData.length - 1]);
+        this.addTodoItem(this.todoData[this.todoData.length - 1], true);
       }
     });
   }
