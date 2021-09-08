@@ -1,5 +1,3 @@
-
-
 const
   todoControl = document.querySelector('.todo-control'),
   headerInput = document.querySelector('.header-input'),
