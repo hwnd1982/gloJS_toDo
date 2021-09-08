@@ -18,26 +18,24 @@ class ToDo {
   checkSpaces(str) {
     return !str ? str : str.trim() !== '';
   }
-  editTodoItem(event, listener) {
+  editTodoItem(event) {
     const
       li = event.target.parentElement.parentElement,
       input = document.createElement('input'),
       editForm = document.createElement('form'),
       textTodo = li.querySelector('.text-todo'),
-      todoEditBtn = li.querySelector('.todo-edit');
+      todoEditBtn = li.querySelector('.todo-edit'),
+      todoSaveBtn = li.querySelector('.todo-save'),
+      listener = event => this.saveTodoItem(event, listener);
 
     li.prepend(editForm);
     editForm.append(input);
     input.value = textTodo.textContent;
     textTodo.textContent = '';
-    todoEditBtn.removeEventListener('click', listener);
-    listener = event => this.saveTodoItem(event, listener);
-    todoEditBtn.addEventListener('click', listener);
-
-    // input.addEventListener('blur', listener);
-
-    todoEditBtn.style.backgroundImage = `url("../img/editing.min.png")`;
+    todoEditBtn.style.display = 'none';
+    todoSaveBtn.style.display = 'block';
     input.focus();
+    input.addEventListener('blur', listener);
     editForm.addEventListener('submit', listener);
   }
   saveTodoItem(event, listener) {
@@ -49,21 +47,19 @@ class ToDo {
       editForm = li.querySelector('form'),
       textTodo = li.querySelector('.text-todo'),
       todoEditBtn = li.querySelector('.todo-edit'),
+      todoSaveBtn = li.querySelector('.todo-save'),
       index = this.items.indexOf(li);
 
-    // if (event.type === 'submit') {
-    //   input.removeEventListener('blur', listener);
-    // }
-
+    if (event.type === 'submit') {
+      input.removeEventListener('blur', listener);
+    }
     event.preventDefault();
     this.todoData[index].value = this.checkSpaces(input.value) ? input.value : this.todoData[index].value;
     textTodo.textContent = this.todoData[index].value;
     localStorage.todoData  = JSON.stringify(this.todoData);
     editForm.remove();
-    todoEditBtn.removeEventListener('click', listener);
-    listener = event => this.editTodoItem(event, listener);
-    todoEditBtn.addEventListener('click', listener);
-    todoEditBtn.style.backgroundImage = '';
+    todoSaveBtn.style.display = '';
+    todoEditBtn.style.display = '';
   }
   getNewTodoItem(item) {
     const li = document.createElement('li');
@@ -74,6 +70,7 @@ class ToDo {
       <span class="text-todo">${item.value}</span>
       <div class="todo-buttons">
         <button class="todo-edit"></button>
+        <button class="todo-save"></button>
         <button class="todo-remove"></button>
         <button class="todo-complete"></button>
       </div>
@@ -84,7 +81,7 @@ class ToDo {
   stateToggleTodoItem(event) {
     const
       li = event.currentTarget.parentElement.parentElement,
-      item = this.todoData[+li.id];
+      item = this.todoData[this.items.indexOf(li)];
 
     item.completed = !item.completed;
     localStorage.todoData  = JSON.stringify(this.todoData);
@@ -105,12 +102,10 @@ class ToDo {
   addTodoItem(item) {
     const li = this.getNewTodoItem(item);
 
-    item.completed ? todoCompleted.prepend(li) : todoList.append(li);
-
+    item.completed ? todoCompleted.append(li) : todoList.append(li);
     li.querySelector('.todo-complete').addEventListener('click', event => this.stateToggleTodoItem(event));
     li.querySelector('.todo-remove').addEventListener('click', event => this.removeTodoItem(event));
-    const listener = event => this.editTodoItem(event, listener);
-    li.querySelector('.todo-edit').addEventListener('click', listener);
+    li.querySelector('.todo-edit').addEventListener('click', event => this.editTodoItem(event));
   }
   addEventListeners() {
     todoControl.addEventListener('submit', event => {

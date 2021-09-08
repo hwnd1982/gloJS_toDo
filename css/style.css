@@ -188,7 +188,11 @@ body {
 }
 
 .todo-edit {
-  background-image: url("../img/edit.min.png");
+  background-image: url("../img/edit.png");
+}
+.todo-save {
+  display: none;
+  background-image: url("../img/save.png");
 }
 .todo-remove {
   background-image: url("../img/trash.png");
