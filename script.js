@@ -113,7 +113,12 @@ class ToDo {
   stateToggleTodoItem(event) {
     const
       li = event.currentTarget.parentElement.parentElement,
-      item = this.todoData[this.items.indexOf(li)];
+      item = this.todoData[this.items.indexOf(li)],
+      finishAnimation = this.animate.bind(this, {
+        duration: 1000,
+        timing: this.makeEaseOut(this.timing),
+        draw: this.addToDoItemAnimationFromLeft.bind(this, li)
+      });
 
     item.completed = !item.completed;
     localStorage.todoData  = JSON.stringify(this.todoData);
@@ -122,12 +127,13 @@ class ToDo {
       duration: 1000,
       timing: this.timing,
       draw: this.removeToDoItemAnimationToRight.bind(this, li,
-        item.completed ? () => todoCompleted.prepend(li) : () =>  todoList.append(li))
-    });
-    setTimeout(this.animate, 1000, {
-      duration: 1000,
-      timing: this.makeEaseOut(this.timing),
-      draw: this.addToDoItemAnimationFromLeft.bind(this, li)
+        item.completed ? () => {
+          todoCompleted.prepend(li);
+          finishAnimation();
+        } : () =>  {
+          todoList.append(li);
+          finishAnimation();
+        })
     });
   }
   removeTodoItem(event) {
