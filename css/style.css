@@ -86,14 +86,15 @@ body {
 
   -webkit-appearance: none;
   -moz-appearance: none;
+  --placeholder-color: rgba(255, 255, 255, 0.75);
 }
 
 .header-input::-webkit-input-placeholder {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--placeholder-color);
 }
 
 .header-input:-ms-input-placeholder {
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--placeholder-color);
 }
 
 .header-button {
