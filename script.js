@@ -1,15 +1,13 @@
-const
-  todoControl = document.querySelector('.todo-control'),
-  headerInput = document.querySelector('.header-input'),
-  todoList = document.getElementById('todo'),
-  todoCompleted = document.getElementById('completed');
-
 class ToDo {
   constructor() {
     this.todoData = localStorage.todoData ? JSON.parse(localStorage.todoData) : [];
     this.items = [];
-    this.loadTodo();
+    this.todoControl = document.querySelector('.todo-control'),
+    this.headerInput = document.querySelector('.header-input'),
+    this.todoList = document.getElementById('todo'),
+    this.todoCompleted = document.getElementById('completed');
     if (this.todoData) {
+      this.loadTodo();
       this.addEventListeners();
     }
   }
@@ -38,17 +36,31 @@ class ToDo {
         }
       }).bind(this));
   }
-  removeToDoItemAnimationToRight(item, action, progress) {
+  removeToDoItemDrawToRight(item, action, progress) {
     item.style.transform = ` translate(${progress * 105 + '%'}, 0)`;
     if (progress === 1) {
       action();
     }
   }
-  addToDoItemAnimationFromLeft(item, progress) {
+  removeToDoItemAnimationToRight(item, action) {
+    this.animate({
+      duration: 1000,
+      timing: this.timing,
+      draw: this.removeToDoItemDrawToRight.bind(this, item, action)
+    });
+  }
+  addToDoItemDrawFromLeft(item, progress) {
     item.style.transform = ` translate(${-105 + (progress * 105) + '%'}, 0)`;
     if (progress === 1) {
       item.style.transform = '';
     }
+  }
+  addToDoItemAnimationFromLeft(item) {
+    this.animate({
+      duration: 1000,
+      timing: this.makeEaseOut(this.timing),
+      draw: this.addToDoItemDrawFromLeft.bind(this, item)
+    });
   }
   editTodoItem(event) {
     const
@@ -113,27 +125,17 @@ class ToDo {
   stateToggleTodoItem(event) {
     const
       li = event.currentTarget.parentElement.parentElement,
-      item = this.todoData[this.items.indexOf(li)],
-      finishAnimation = this.animate.bind(this, {
-        duration: 1000,
-        timing: this.makeEaseOut(this.timing),
-        draw: this.addToDoItemAnimationFromLeft.bind(this, li)
-      });
+      item = this.todoData[this.items.indexOf(li)];
 
     item.completed = !item.completed;
     localStorage.todoData  = JSON.stringify(this.todoData);
     //
-    this.animate({
-      duration: 1000,
-      timing: this.timing,
-      draw: this.removeToDoItemAnimationToRight.bind(this, li,
-        item.completed ? () => {
-          todoCompleted.prepend(li);
-          finishAnimation();
-        } : () =>  {
-          todoList.append(li);
-          finishAnimation();
-        })
+    this.removeToDoItemAnimationToRight(li, item.completed ? () => {
+      this.todoCompleted.prepend(li);
+      this.addToDoItemAnimationFromLeft(li);
+    } : () =>  {
+      this.todoList.append(li);
+      this.addToDoItemAnimationFromLeft(li);
     });
   }
   removeTodoItem(event) {
@@ -145,35 +147,27 @@ class ToDo {
     this.items.splice(index, 1);
     localStorage.todoData  = JSON.stringify(this.todoData);
     //
-    this.animate({
-      duration: 1000,
-      timing: this.timing,
-      draw: this.removeToDoItemAnimationToRight.bind(this, li, () => li.remove())
-    });
+    this.removeToDoItemAnimationToRight(li, () => li.remove());
   }
   addTodoItem(item, animated) {
     const li = this.getNewTodoItem(item);
 
-    this.animate({
-      duration: animated ? 1000 : 0,
-      timing: this.makeEaseOut(this.timing),
-      draw: this.addToDoItemAnimationFromLeft.bind(this, li)
-    });
-    item.completed ? todoCompleted.append(li) : todoList.append(li);
+    item.completed ? this.todoCompleted.append(li) : this.todoList.append(li);
+    animated ? this.addToDoItemAnimationFromLeft(li) : null;
     li.querySelector('.todo-complete').addEventListener('click', event => this.stateToggleTodoItem(event));
     li.querySelector('.todo-remove').addEventListener('click', event => this.removeTodoItem(event));
     li.querySelector('.todo-edit').addEventListener('click', event => this.editTodoItem(event));
   }
   addEventListeners() {
-    todoControl.addEventListener('submit', event => {
+    this.todoControl.addEventListener('submit', event => {
       event.preventDefault();
-      if (this.checkSpaces(headerInput.value)) {
+      if (this.checkSpaces(this.headerInput.value)) {
         this.todoData.push({
-          value: headerInput.value.trim(),
+          value: this.headerInput.value.trim(),
           completed: false
         });
         localStorage.todoData  = JSON.stringify(this.todoData);
-        headerInput.value = '';
+        this.headerInput.value = '';
         this.addTodoItem(this.todoData[this.todoData.length - 1], true);
       }
     });
