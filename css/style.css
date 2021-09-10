@@ -190,6 +190,10 @@ body {
 .todo-edit {
   background-image: url("../img/pencil.png");
 }
+.todo-save {
+  display: none;
+  background-image: url("../img/editing.png");
+}
 
 .todo-completed .todo-complete {
   background-image: url("../img/check.png");
